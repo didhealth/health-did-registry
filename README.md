@@ -48,27 +48,27 @@ This contract relies on an external library for data structures, which is import
 ### removeDelegateAddress(address _peerAddress, string memory _healthDid)
 - Description: Removes a delegate address from accessing the specified DID.
 - Parameters:
- - _peerAddress: The address of the delegate.
- -  _healthDid: The unique identifier for the health DID.
+  - _peerAddress: The address of the delegate.
+  -  _healthDid: The unique identifier for the health DID.
 - Returns: bool indicating the success of the operation.
   
 ### transferOwnership(address _newAddress, string memory _healthDid)
 - Description: Transfers ownership of the specified DID to a new address.
 - Parameters:
- - _newAddress: The address to which ownership is transferred.
- - _healthDid: The unique identifier for the health DID.
+  - _newAddress: The address to which ownership is transferred.
+  - _healthDid: The unique identifier for the health DID.
 - Returns: bool indicating the success of the operation.
 
 ### getHealtDID(string memory _healthDid)
 - Description: Retrieves the health DID information associated with a specific health DID.
 - Parameters:
- - _healthDid: The unique identifier for the health DID.
+  - _healthDid: The unique identifier for the health DID.
 - Returns: A Structs.HealthDID struct containing the health DID information.
   
 ### resolveChainId(string memory did)
 - Description: Resolves the chain ID from the given DID.
 - Parameters:
- - did: The DID from which to extract the chain ID.
+  - did: The DID from which to extract the chain ID.
 - Returns: The resolved chain ID as a uint256.
 
 ### getChainID()
@@ -78,7 +78,7 @@ This contract relies on an external library for data structures, which is import
 #### stringToBytes32(string memory _source)
 - Description: Converts a string to bytes32.
 - Parameters:
- - _source: The source string.
+  - _source: The source string.
 - Returns: The converted bytes32 value.
 
 ## Usage
