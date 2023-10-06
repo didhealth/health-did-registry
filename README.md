@@ -37,7 +37,7 @@ This contract relies on an external library for data structures, which is import
   - _healthDid: The unique identifier for the health DID.
   - _uris: An array of alternative URIs.
 - Returns: bool indicating the success of the operation.
-    
+
 ### addDelegateAddress(address _peerAddress, string memory _healthDid)
 - Description: Adds a delegate address for accessing the specified DID.
 - Parameters:
