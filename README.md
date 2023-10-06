@@ -25,53 +25,56 @@ This contract relies on an external library for data structures, which is import
   - _uri: The URI pointing to the associated health data.
 - Returns: bool indicating the success of the operation.
 ### updateDIDData(string memory _healthDid, string memory _uri)
-Description: Updates the URI associated with an existing DID.
-Parameters:
-_healthDid: The unique identifier for the health DID.
-_uri: The new URI pointing to the updated health data.
-Returns: bool indicating the success of the operation.
-addAltData(string memory _healthDid, string[] memory _uris)
-Description: Adds alternative URIs to an existing DID's data.
-Parameters:
+- Description: Updates the URI associated with an existing DID.
+- Parameters:
+-
+  - _healthDid: The unique identifier for the health DID.
+  - _uri: The new URI pointing to the updated health data.
+- Returns: bool indicating the success of the operation.
+
+### addAltData(string memory _healthDid, string[] memory _uris)
+- Description: Adds alternative URIs to an existing DID's data.
+- Parameters:
 _healthDid: The unique identifier for the health DID.
 _uris: An array of alternative URIs.
-Returns: bool indicating the success of the operation.
-addDelegateAddress(address _peerAddress, string memory _healthDid)
-Description: Adds a delegate address for accessing the specified DID.
-Parameters:
-_peerAddress: The address of the delegate.
-_healthDid: The unique identifier for the health DID.
-Returns: bool indicating the success of the operation.
-removeDelegateAddress(address _peerAddress, string memory _healthDid)
-Description: Removes a delegate address from accessing the specified DID.
-Parameters:
-_peerAddress: The address of the delegate.
-_healthDid: The unique identifier for the health DID.
-Returns: bool indicating the success of the operation.
-transferOwnership(address _newAddress, string memory _healthDid)
-Description: Transfers ownership of the specified DID to a new address.
-Parameters:
-_newAddress: The address to which ownership is transferred.
-_healthDid: The unique identifier for the health DID.
-Returns: bool indicating the success of the operation.
-getHealtDID(string memory _healthDid)
-Description: Retrieves the health DID information associated with a specific health DID.
-Parameters:
-_healthDid: The unique identifier for the health DID.
-Returns: A Structs.HealthDID struct containing the health DID information.
-resolveChainId(string memory did)
-Description: Resolves the chain ID from the given DID.
-Parameters:
-did: The DID from which to extract the chain ID.
-Returns: The resolved chain ID as a uint256.
-getChainID()
-Description: Retrieves the current chain ID.
-Returns: The current chain ID as a uint256.
-stringToBytes32(string memory _source)
-Description: Converts a string to bytes32.
-Parameters:
-_source: The source string.
-Returns: The converted bytes32 value.
+- Returns: bool indicating the success of the operation.
+### addDelegateAddress(address _peerAddress, string memory _healthDid)
+- Description: Adds a delegate address for accessing the specified DID.
+- Parameters:
+  - _peerAddress: The address of the delegate.
+  - _healthDid: The unique identifier for the health DID.
+- Returns: bool indicating the success of the operation.
+
+### removeDelegateAddress(address _peerAddress, string memory _healthDid)
+- Description: Removes a delegate address from accessing the specified DID.
+- Parameters:
+ - _peerAddress: The address of the delegate.
+ -  _healthDid: The unique identifier for the health DID.
+- Returns: bool indicating the success of the operation.
+# transferOwnership(address _newAddress, string memory _healthDid)
+- Description: Transfers ownership of the specified DID to a new address.
+- Parameters:
+ - _newAddress: The address to which ownership is transferred.
+ - _healthDid: The unique identifier for the health DID.
+- Returns: bool indicating the success of the operation.
+## getHealtDID(string memory _healthDid)
+- Description: Retrieves the health DID information associated with a specific health DID.
+- Parameters:
+ - _healthDid: The unique identifier for the health DID.
+- Returns: A Structs.HealthDID struct containing the health DID information.
+## resolveChainId(string memory did)
+- Description: Resolves the chain ID from the given DID.
+- Parameters:
+ - did: The DID from which to extract the chain ID.
+- Returns: The resolved chain ID as a uint256.
+## getChainID()
+- Description: Retrieves the current chain ID.
+- Returns: The current chain ID as a uint256.
+### stringToBytes32(string memory _source)
+- Description: Converts a string to bytes32.
+- Parameters:
+ - _source: The source string.
+- Returns: The converted bytes32 value.
 
 ## Usage
 To use this contract, deploy it on a compatible Ethereum blockchain, and interact with it using a compatible Ethereum wallet or smart contract interface.
