@@ -1,132 +1,125 @@
-/* SPDX-License-Identifier: MIT */
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.17;
 
-pragma solidity ^0.8.6;
+import "./lib/Structs.sol";
 
 contract HealthDIDRegistry {
+    // event didRegistered();git c
+    // event didUpdated();
+    // mapping(string => mapping(address => Structs.HealthDID)) private didResolver;
+    mapping(string => address) private didOwnerAddressRegistry;
+    mapping(address => Structs.HealthDID) public addressDidMapping;
+    mapping(address => mapping(string => bool)) public delegateAddresses;
 
-  mapping(address => address) public owners;
-  mapping(address => mapping(bytes32 => mapping(address => uint))) public delegates;
-  mapping(address => uint) public changed;
-  mapping(address => uint) public nonce;
+    modifier onlyOwner(string memory _healthDid) {
+        require(msg.sender == didOwnerAddressRegistry[_healthDid], "You're not the owner of this DID");
+        _;
+    }
 
-  modifier onlyOwner(address identity, address actor) {
-    require (actor == identityOwner(identity), "bad_actor");
-    _;
-  }
+    constructor() {}
 
-  event DIDOwnerChanged(
-    address indexed identity,
-    address owner,
-    uint previousChange
-  );
+    function getHealtDID(string memory _healthDid) public view returns (Structs.HealthDID memory) {
+        return addressDidMapping[didOwnerAddressRegistry[_healthDid]];
+    }
 
-  event DIDDelegateChanged(
-    address indexed identity,
-    bytes32 delegateType,
-    address delegate,
-    uint validTo,
-    uint previousChange
-  );
+    function registerDID(string memory _healthDID, string memory _uri) public returns (bool) {
+        require(didOwnerAddressRegistry[_healthDID] == address(0), "DID already exists");
+        require(resolveChainId(_healthDID) == getChainID(), "Incorrect Chain Id in DID");
 
-  event DIDAttributeChanged(
-    address indexed identity,
-    bytes32 name,
-    bytes value,
-    uint validTo,
-    uint previousChange
-  );
+        didOwnerAddressRegistry[_healthDID] = msg.sender;
+        addressDidMapping[msg.sender].owner = msg.sender;
+        addressDidMapping[msg.sender].healthDid = _healthDID;
+        addressDidMapping[msg.sender].ipfsUri = _uri;
+        addressDidMapping[msg.sender].hasWorldId = false;
+        addressDidMapping[msg.sender].hasPolygonId = false;
+        addressDidMapping[msg.sender].hasSocialId = false;
+        addressDidMapping[msg.sender].reputationScore = 10;
 
-  function identityOwner(address identity) public view returns(address) {
-     address owner = owners[identity];
-     if (owner != address(0x00)) {
-       return owner;
-     }
-     return identity;
-  }
+        return true;
+    }
 
-  function checkSignature(address identity, uint8 sigV, bytes32 sigR, bytes32 sigS, bytes32 hash) internal returns(address) {
-    address signer = ecrecover(hash, sigV, sigR, sigS);
-    require(signer == identityOwner(identity), "bad_signature");
-    nonce[signer]++;
-    return signer;
-  }
+    function updateDIDData(string memory _healthDid, string memory _uri) public returns (bool) {
+        require(didOwnerAddressRegistry[_healthDid] != address(0), "DID doesn't exists");
+        require(msg.sender == didOwnerAddressRegistry[_healthDid], "You're not the owner of this DID");
+        require(resolveChainId(_healthDid) == getChainID(), "Incorrect Chain Id in DID");
 
-  function validDelegate(address identity, bytes32 delegateType, address delegate) public view returns(bool) {
-    uint validity = delegates[identity][keccak256(abi.encode(delegateType))][delegate];
-    return (validity > block.timestamp);
-  }
+        addressDidMapping[msg.sender].ipfsUri = _uri;
+        return true;
+    }
 
-  function changeOwner(address identity, address actor, address newOwner) internal onlyOwner(identity, actor) {
-    owners[identity] = newOwner;
-    emit DIDOwnerChanged(identity, newOwner, changed[identity]);
-    changed[identity] = block.number;
-  }
+    function addAltData(string memory _healthDid, string[] memory _uris) public returns (bool) {
+        require(msg.sender == didOwnerAddressRegistry[_healthDid], "You're not the owner of this DID");
+        require(resolveChainId(_healthDid) == getChainID(), "Incorrect Chain Id in DID");
 
-  function changeOwner(address identity, address newOwner) public {
-    changeOwner(identity, msg.sender, newOwner);
-  }
+        for (uint256 i = 0; i < _uris.length; i++) {
+            addressDidMapping[msg.sender].altIpfsUris.push(_uris[i]);
+        }
 
-  function changeOwnerSigned(address identity, uint8 sigV, bytes32 sigR, bytes32 sigS, address newOwner) public {
-    bytes32 hash = keccak256(abi.encodePacked(bytes1(0x19), bytes1(0), this, nonce[identityOwner(identity)], identity, "changeOwner", newOwner));
-    changeOwner(identity, checkSignature(identity, sigV, sigR, sigS, hash), newOwner);
-  }
+        return true;
+    }
 
-  function addDelegate(address identity, address actor, bytes32 delegateType, address delegate, uint validity) internal onlyOwner(identity, actor) {
-    delegates[identity][keccak256(abi.encode(delegateType))][delegate] = block.timestamp + validity;
-    emit DIDDelegateChanged(identity, delegateType, delegate, block.timestamp + validity, changed[identity]);
-    changed[identity] = block.number;
-  }
+    function addDelegateAddress(address _peerAddress, string memory _healthDid) public returns (bool) {
+        require(didOwnerAddressRegistry[_healthDid] != address(0), "DID doesn't exists");
+        require(msg.sender == didOwnerAddressRegistry[_healthDid], "You're not the owner of this DID");
+        require(resolveChainId(_healthDid) == getChainID(), "Incorrect Chain Id in DID");
 
-  function addDelegate(address identity, bytes32 delegateType, address delegate, uint validity) public {
-    addDelegate(identity, msg.sender, delegateType, delegate, validity);
-  }
+        delegateAddresses[_peerAddress][_healthDid] = true;
 
-  function addDelegateSigned(address identity, uint8 sigV, bytes32 sigR, bytes32 sigS, bytes32 delegateType, address delegate, uint validity) public {
-    bytes32 hash = keccak256(abi.encodePacked(bytes1(0x19), bytes1(0), this, nonce[identityOwner(identity)], identity, "addDelegate", delegateType, delegate, validity));
-    addDelegate(identity, checkSignature(identity, sigV, sigR, sigS, hash), delegateType, delegate, validity);
-  }
+        return true;
+    }
 
-  function revokeDelegate(address identity, address actor, bytes32 delegateType, address delegate) internal onlyOwner(identity, actor) {
-    delegates[identity][keccak256(abi.encode(delegateType))][delegate] = block.timestamp;
-    emit DIDDelegateChanged(identity, delegateType, delegate, block.timestamp, changed[identity]);
-    changed[identity] = block.number;
-  }
+    function removeDelegateAddress(address _peerAddress, string memory _healthDid) public returns (bool) {
+        require(didOwnerAddressRegistry[_healthDid] != address(0), "DID doesn't exists");
+        require(msg.sender == didOwnerAddressRegistry[_healthDid], "You're not the owner of this DID");
+        require(resolveChainId(_healthDid) == getChainID(), "Incorrect Chain Id in DID");
+        require(delegateAddresses[_peerAddress][_healthDid] == true, "This address isn't a delegate Address");
 
-  function revokeDelegate(address identity, bytes32 delegateType, address delegate) public {
-    revokeDelegate(identity, msg.sender, delegateType, delegate);
-  }
+        delegateAddresses[_peerAddress][_healthDid] = false;
 
-  function revokeDelegateSigned(address identity, uint8 sigV, bytes32 sigR, bytes32 sigS, bytes32 delegateType, address delegate) public {
-    bytes32 hash = keccak256(abi.encodePacked(bytes1(0x19), bytes1(0), this, nonce[identityOwner(identity)], identity, "revokeDelegate", delegateType, delegate));
-    revokeDelegate(identity, checkSignature(identity, sigV, sigR, sigS, hash), delegateType, delegate);
-  }
+        return true;
+    }
 
-  function setAttribute(address identity, address actor, bytes32 name, bytes memory value, uint validity ) internal onlyOwner(identity, actor) {
-    emit DIDAttributeChanged(identity, name, value, block.timestamp + validity, changed[identity]);
-    changed[identity] = block.number;
-  }
+    function transferOwnership(address _newAddress, string memory _healthDid) public returns (bool) {
+        require(didOwnerAddressRegistry[_healthDid] != address(0), "DID doesn't exists");
+        require(msg.sender == didOwnerAddressRegistry[_healthDid], "You're not the owner of this DID");
+        require(resolveChainId(_healthDid) == getChainID(), "Incorrect Chain Id in DID");
+        require(_newAddress != msg.sender, "Cannot transfer ownership to existing owner");
 
-  function setAttribute(address identity, bytes32 name, bytes memory value, uint validity) public {
-    setAttribute(identity, msg.sender, name, value, validity);
-  }
+        addressDidMapping[msg.sender].owner = _newAddress;
 
-  function setAttributeSigned(address identity, uint8 sigV, bytes32 sigR, bytes32 sigS, bytes32 name, bytes memory value, uint validity) public {
-    bytes32 hash = keccak256(abi.encodePacked(bytes1(0x19), bytes1(0), this, nonce[identityOwner(identity)], identity, "setAttribute", name, value, validity));
-    setAttribute(identity, checkSignature(identity, sigV, sigR, sigS, hash), name, value, validity);
-  }
+        return true;
+    }
 
-  function revokeAttribute(address identity, address actor, bytes32 name, bytes memory value ) internal onlyOwner(identity, actor) {
-    emit DIDAttributeChanged(identity, name, value, 0, changed[identity]);
-    changed[identity] = block.number;
-  }
+    function resolveChainId(string memory did) public pure returns (uint256) {
+        require(bytes(did).length >= 6, "Input string too short");
 
-  function revokeAttribute(address identity, bytes32 name, bytes memory value) public {
-    revokeAttribute(identity, msg.sender, name, value);
-  }
+        bytes memory didBytes = bytes(did);
+        uint256 chainIdUint = 0;
 
-  function revokeAttributeSigned(address identity, uint8 sigV, bytes32 sigR, bytes32 sigS, bytes32 name, bytes memory value) public {
-    bytes32 hash = keccak256(abi.encodePacked(bytes1(0x19), bytes1(0), this, nonce[identityOwner(identity)], identity, "revokeAttribute", name, value));
-    revokeAttribute(identity, checkSignature(identity, sigV, sigR, sigS, hash), name, value);
-  }
+        for (uint256 i = 0; i < 6; i++) {
+            uint8 charValue = uint8(didBytes[i]);
+            require(charValue >= 48 && charValue <= 57, "Not a valid number"); // ASCII values for 0-9
+            chainIdUint = chainIdUint * 10 + (charValue - 48); // converting ASCII to integer and accumulating
+        }
+        return chainIdUint;
+    }
 
+    function getChainID() public view returns (uint256) {
+        uint256 id;
+        assembly {
+            id := chainid()
+        }
+        return id;
+    }
+
+    function stringToBytes32(string memory _source) public pure returns (bytes32 _result) {
+        bytes memory tempEmptyStringTest = bytes(_source);
+        if (tempEmptyStringTest.length == 0) {
+            return 0x0;
+        }
+
+        assembly {
+            _result := mload(add(_source, 32))
+        }
+    }
 }
